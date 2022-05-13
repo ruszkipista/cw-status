@@ -3,14 +3,16 @@ async function init(){
         form.onsubmit=onClickedSubmit;
     }
 
+    const collections = JSON.parse(window.localStorage.getItem('collections'));
+    if (!collections)
+        await fetchCollections("collections.json");
+
     const userID = window.localStorage.getItem('userid');
     const userIdInputElement = document.getElementById('userid');
     userIdInputElement.value = userID;
 
-    const collections = JSON.parse(window.localStorage.getItem('collections'));
-    if (!collections)
-        fetchCollections("collections.json");
     const completedKatas = await getCWdata(userID);
+    
     generateTable(completedKatas);
 }
 onload=init;
@@ -24,6 +26,7 @@ async function onClickedSubmit(event){
     }
     const userID = formdata.filter(e=>e[0]==='userid')?.[0][1];
     window.localStorage.setItem('userid', userID);
+    
     const completedKatas = await getCWdata(userID);
     generateTable(completedKatas);
 }
@@ -45,8 +48,20 @@ async function fetchCollections(file){
   });
 }
 
-const getCWdata = async (userid) => {
-    const url = `https://www.codewars.com/api/v1/users/${userid}/code-challenges/completed`;
+async function getCWdata(userid) {
+    let result = [];
+    let page = 0;
+    let nextBatch=[];
+    do {
+        nextBatch = await getCWpage(userid, page);
+        result = result.concat(nextBatch);
+        page++;
+    } while (nextBatch.length>0);
+    return result;
+}
+
+const getCWpage = async (userid, page) => {
+    const url = `https://www.codewars.com/api/v1/users/${userid}/code-challenges/completed?page=${page}`;
     return await fetch(url)
     .then(response => {
         if (response.status !== 200) {
@@ -119,8 +134,15 @@ function generateTable(completedKatas) {
                 if (line % 2 == 0) tRow.className = "stripe";
                 for (const key in row) {
                     const cell = tRow.insertCell();
-                    const text = document.createTextNode(row[key]);
-                    cell.appendChild(text);
+                    if (Array. isArray(row[key])){
+                        for (const subrow of row[key]){
+                            const multirow = document.createTextNode(subrow.join("\n"));
+                            cell.appendChild(multirow);
+                        }
+                    } else {
+                        const text = document.createTextNode(row[key]);
+                        cell.appendChild(text);
+                    }
                 }
             }
         }
