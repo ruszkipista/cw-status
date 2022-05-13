@@ -9,7 +9,7 @@ async function init(){
 
     const collections = JSON.parse(window.localStorage.getItem('collections'));
     if (!collections)
-        fetchCollections("/collections.json");
+        fetchCollections("collections.json");
     const completedKatas = await getCWdata(userID);
     generateTable(completedKatas);
 }
