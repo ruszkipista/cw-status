@@ -3,15 +3,17 @@ async function init(){
         form.onsubmit=onClickedSubmit;
     }
 
-    const collections = JSON.parse(window.localStorage.getItem('collections'));
-    if (!collections)
-        await fetchCollections("collections.json");
+    // getCWkatasFromCollection();
+
+    await fetchCollections("collections.json");
 
     const userID = window.localStorage.getItem('userid');
-    const userIdInputElement = document.getElementById('userid');
-    userIdInputElement.value = userID;
-
-    const completedKatas = await getCWdata(userID);
+    let completedKatas=null;
+    if (userID){
+        const userIdInputElement = document.getElementById('userid');
+        userIdInputElement.value = userID;
+        completedKatas = await getCWdata(userID);
+    }
     
     generateTable(completedKatas);
 }
@@ -48,6 +50,10 @@ async function fetchCollections(file){
   });
 }
 
+function getCWkatasFromCollection(collection="functional-fruits"){
+    URL_BASE = "https://www.codewars.com/collections/";
+}
+
 async function getCWdata(userid) {
     let result = [];
     let page = 0;
@@ -56,7 +62,7 @@ async function getCWdata(userid) {
         nextBatch = await getCWpage(userid, page);
         result = result.concat(nextBatch);
         page++;
-    } while (nextBatch.length>0);
+    } while ((nextBatch?.length ?? 0) >0);
     return result;
 }
 
@@ -85,19 +91,24 @@ function generateTableContent(completedKatas){
         return obj;
     },{}) ?? {};
     for (const collIndex in collections){
-        let collectionKatas = 0;
+        let doneInJS = 0;
+        let doneInOther = 0;
         for (const kataID of collections[collIndex].katas){
             if (kataID in completedKataDict)
-                collectionKatas++;
+                if (completedKataDict[kataID].completedLanguages.includes("javascript"))
+                    doneInJS++;
+                else
+                    doneInOther++;
         }
-        collections[collIndex].total = collections[collIndex].katas.length;
-        collections[collIndex].done  = collectionKatas;
-        collections[collIndex].new   = collections[collIndex].total - collectionKatas;
-        collections[collIndex].perc  = Math.round((collectionKatas / collections[collIndex].total)*10000)/100 + '%';
+        collections[collIndex].total       = collections[collIndex].katas.length;
+        collections[collIndex].doneInJS    = doneInJS;
+        collections[collIndex].doneInOther = doneInOther;
+        collections[collIndex].newInJS     = collections[collIndex].total - doneInJS;
+        collections[collIndex].percInJS    = Math.round((doneInJS / collections[collIndex].total)*10000)/100 + '%';
         delete collections[collIndex].katas;
     }
     return {
-        "labels": ["Tutorial", "Homework CW collection", "Total", "Done", "New", "Done%"],
+        "labels": ["Tutorial", "Homework CW collection", "Total", "Done in JS", "Done in *", "New in JS", "Done in JS%"],
         "rows":   collections
     }
 }
