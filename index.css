@@ -1,5 +1,5 @@
 table {
-    width: 550px;
+    min-width: 550px;
     font-family: sans-serif;
 }
 caption {
@@ -7,9 +7,7 @@ caption {
     padding-left: 5px;
     height: 25px;
 }
-col.no {
-    width: 20%;
-}
+
 table thead tr th {
     color: white;
     background: #FF6600;
@@ -20,7 +18,7 @@ table tfoot tr td {
     vertical-align: bottom;
 }
 table tbody tr td {
-    text-align: center;
+    text-align: left;
 }
 table tbody tr.stripe {
     background: #FEEDB7;

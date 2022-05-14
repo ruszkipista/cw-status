@@ -3,9 +3,13 @@ async function init(){
         form.onsubmit=onClickedSubmit;
     }
 
-    // getCWkatasFromCollection();
-
-    await fetchCollections("collections.json");
+    const collectionsTxt = await fetchCollections("collections.json");
+    const collections = JSON.parse(collectionsTxt);
+    for (const collIndex in collections){
+        const collectionID = collections[collIndex].collection;
+        collections[collIndex].katas = await getCWkatasFromCollection(collectionID);
+    }
+    window.localStorage.setItem('collections', JSON.stringify(collections));
 
     const userID = window.localStorage.getItem('userid');
     let completedKatas=null;
@@ -34,7 +38,7 @@ async function onClickedSubmit(event){
 }
 
 async function fetchCollections(file){
-  fetch(file)
+  return await fetch(file)
   .then(response => {
       if (response.status !== 200) {
         console.log(`Looks like there was a problem fetching ${file}. Status Code: ${response.status}`);
@@ -43,15 +47,41 @@ async function fetchCollections(file){
       return response.json();
   })
   .then(data => {
-      window.localStorage.setItem('collections', JSON.stringify(data));
+      return JSON.stringify(data);
   })
   .catch(err => {
-    console.log('Fetch Error :-S', err);
+    console.log('Fetch Error :%s', err);
   });
 }
 
-function getCWkatasFromCollection(collection="functional-fruits"){
-    URL_BASE = "https://www.codewars.com/collections/";
+async function getCWkatasFromCollection(collection){
+    const targetUrl = `http://www.codewars.com/collections/${collection}`;
+    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    return await fetch(url)
+    .then(response => {
+        if (response.status !== 200) {
+          console.log(`Looks like there was a problem fetching ${url}. Status Code: ${response.status}`);
+          return null;
+        }
+        return response.json();
+    })
+    .then(data => {
+        // target kataID and kataText from anchor elements like this
+        // <a href="/kata/52adc142b2651f25a8000643">Sleigh Authentication</a>
+        const matches = data.contents.matchAll(/<a href="\/kata\/(.*?)">(.*?)<\/a>/g);
+        const katas=[];
+        for (const match of matches) katas.push({"id":match[1],"name":decodeHtmlEntity(match[2])});
+        return katas;
+    })
+    .catch(err => {
+      console.log('Fetch Error :%s', err);
+    });
+}
+
+const decodeHtmlEntity = html=> {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
 }
 
 async function getCWdata(userid) {
@@ -80,7 +110,7 @@ const getCWpage = async (userid, page) => {
         return data.data;
     })
     .catch(err => {
-      console.log('Fetch Error :-S', err);
+      console.log('Fetch Error :%s', err);
     });    
 }
 
@@ -94,14 +124,14 @@ function generateTableContent(completedKatas){
         let doneInJS = 0;
         let doneInOther = 0;
         const incompleteInJS = [];
-        for (const kataID of collections[collIndex].katas){
-            if (kataID in completedKataDict)
-                if (completedKataDict[kataID].completedLanguages.includes("javascript")){
+        for (const kata of collections[collIndex].katas){
+            if (kata.id in completedKataDict)
+                if (completedKataDict[kata.id].completedLanguages.includes("javascript")){
                     doneInJS++;
                     continue;
                 } else
                     doneInOther++;
-            incompleteInJS.push(kataID);
+            incompleteInJS.push(kata);
         }
         collections[collIndex].total          = collections[collIndex].katas.length;
         collections[collIndex].doneInJS       = doneInJS;
@@ -151,10 +181,9 @@ function generateTable(completedKatas) {
                     if (Array.isArray(row[key])){
                         for (const item of row[key]){
                             const a = document.createElement('a');
-                            const linkText = document.createTextNode("kata");
+                            const linkText = document.createTextNode(item.name);
                             a.appendChild(linkText);
-                            a.title = item;
-                            a.href = `https://www.codewars.com/kata/${item}`;
+                            a.href = `https://www.codewars.com/kata/${item.id}`;
                             a.target="_blank";
                             cell.appendChild(a);
                             cell.appendChild(document.createElement('br'));
