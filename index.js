@@ -93,22 +93,25 @@ function generateTableContent(completedKatas){
     for (const collIndex in collections){
         let doneInJS = 0;
         let doneInOther = 0;
+        const incompleteInJS = [];
         for (const kataID of collections[collIndex].katas){
             if (kataID in completedKataDict)
-                if (completedKataDict[kataID].completedLanguages.includes("javascript"))
+                if (completedKataDict[kataID].completedLanguages.includes("javascript")){
                     doneInJS++;
-                else
+                    continue;
+                } else
                     doneInOther++;
+            incompleteInJS.push(kataID);
         }
-        collections[collIndex].total       = collections[collIndex].katas.length;
-        collections[collIndex].doneInJS    = doneInJS;
-        collections[collIndex].doneInOther = doneInOther;
-        collections[collIndex].newInJS     = collections[collIndex].total - doneInJS;
-        collections[collIndex].percInJS    = Math.round((doneInJS / collections[collIndex].total)*10000)/100 + '%';
+        collections[collIndex].total          = collections[collIndex].katas.length;
+        collections[collIndex].doneInJS       = doneInJS;
+        collections[collIndex].doneInOther    = doneInOther;
+        collections[collIndex].percInJS       = Math.round((doneInJS / collections[collIndex].total)*10000)/100 + '%';
+        collections[collIndex].incompleteInJS = incompleteInJS;
         delete collections[collIndex].katas;
     }
     return {
-        "labels": ["Tutorial", "Homework CW collection", "Total", "Done in JS", "Done in *", "New in JS", "Done in JS%"],
+        "labels": ["Tutorial", "Homework CW collection", "Total", "Done in JS", "Done in *", "Done in JS%", "Incomplete in JS"],
         "rows":   collections
     }
 }
@@ -145,10 +148,16 @@ function generateTable(completedKatas) {
                 if (line % 2 == 0) tRow.className = "stripe";
                 for (const key in row) {
                     const cell = tRow.insertCell();
-                    if (Array. isArray(row[key])){
-                        for (const subrow of row[key]){
-                            const multirow = document.createTextNode(subrow.join("\n"));
-                            cell.appendChild(multirow);
+                    if (Array.isArray(row[key])){
+                        for (const item of row[key]){
+                            const a = document.createElement('a');
+                            const linkText = document.createTextNode("kata");
+                            a.appendChild(linkText);
+                            a.title = item;
+                            a.href = `https://www.codewars.com/kata/${item}`;
+                            a.target="_blank";
+                            cell.appendChild(a);
+                            cell.appendChild(document.createElement('br'));
                         }
                     } else {
                         const text = document.createTextNode(row[key]);
