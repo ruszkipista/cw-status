@@ -3,23 +3,25 @@ async function init(){
         form.onsubmit=onClickedSubmit;
     }
 
-    const collectionsTxt = await fetchCollections("collections.json");
+    let collectionsTxt = await fetchCollections("collections.json");
     const collections = JSON.parse(collectionsTxt);
     for (const collIndex in collections){
         const collectionID = collections[collIndex].collection;
         collections[collIndex].katas = await getCWkatasFromCollection(collectionID);
     }
-    window.localStorage.setItem('collections', JSON.stringify(collections));
+    window.localStorage.removeItem('collections');
+    collectionsTxt = JSON.stringify(collections);
+    window.sessionStorage.setItem('collections', collectionsTxt);
 
     const userID = window.localStorage.getItem('userid');
-    let completedKatas=null;
     if (userID){
         const userIdInputElement = document.getElementById('userid');
         userIdInputElement.value = userID;
-        completedKatas = await getCWdata(userID);
+
+        const completedKatas = await getCWdata(userID);
+        const tableContent = generateTableContent(collections, completedKatas);   
+        generateTable(tableContent);
     }
-    
-    generateTable(completedKatas);
 }
 onload=init;
 
@@ -34,7 +36,9 @@ async function onClickedSubmit(event){
     window.localStorage.setItem('userid', userID);
     
     const completedKatas = await getCWdata(userID);
-    generateTable(completedKatas);
+    const collections = JSON.parse(window.sessionStorage.getItem('collections'));
+    const tableContent = generateTableContent(collections, completedKatas);
+    generateTable(tableContent);
 }
 
 async function fetchCollections(file){
@@ -66,10 +70,12 @@ async function getCWkatasFromCollection(collection){
         return response.json();
     })
     .then(data => {
-        // target kataID and kataText from anchor elements like this
+        // target anchor elements like this
         // <a href="/kata/52adc142b2651f25a8000643">Sleigh Authentication</a>
+        // and get with kataID:52adc142b2651f25a8000643 and kataName:Sleigh Authentication
         const matches = data.contents.matchAll(/<a href="\/kata\/(.*?)">(.*?)<\/a>/g);
         const katas=[];
+        // the kataName might contain HTML entity, convert them back to character
         for (const match of matches) katas.push({"id":match[1],"name":decodeHtmlEntity(match[2])});
         return katas;
     })
@@ -114,8 +120,7 @@ const getCWpage = async (userid, page) => {
     });    
 }
 
-function generateTableContent(completedKatas){
-    const collections = JSON.parse(window.localStorage.getItem('collections'));
+function generateTableContent(collections, completedKatas){
     const completedKataDict = completedKatas?.reduce((obj,elem)=>{
         obj[elem.id]= elem;
         return obj;
@@ -146,52 +151,48 @@ function generateTableContent(completedKatas){
     }
 }
 
-function generateTable(completedKatas) {
-    const tableContent = generateTableContent(completedKatas);
+function generateTable(tableContent, tab=document.getElementsByTagName("table")[0]) {
     const rows = tableContent.rows;
     const labels = tableContent.labels;
-    const tabs = document.getElementsByTagName("table");
-    for (const tab of tabs) {
-        tab.replaceChildren();
-        // TABLE HEAD
-        const thead = tab.createTHead();
-        let tRow = thead.insertRow();
-        for (const label of labels) {
-            const th = document.createElement("th");
-            const text = document.createTextNode(label);
-            th.appendChild(text);
-            tRow.appendChild(th);
-        }
-        // TABLE FOOT
-        const tfoot = tab.createTFoot();
-        tRow = tfoot.insertRow()
-        const cell = tRow.insertCell();
-        cell.colSpan = labels.length;
+    tab.replaceChildren();
+    // TABLE HEAD
+    const thead = tab.createTHead();
+    let tRow = thead.insertRow();
+    for (const label of labels) {
+        const th = document.createElement("th");
+        const text = document.createTextNode(label);
+        th.appendChild(text);
+        tRow.appendChild(th);
+    }
+    // TABLE FOOT
+    const tfoot = tab.createTFoot();
+    tRow = tfoot.insertRow()
+    const cell = tRow.insertCell();
+    cell.colSpan = labels.length;
 
-        // TABLE BODY
-        if (rows){
-            const tbody = tab.createTBody();
-            let line = 0;
-            for (const row of rows) {
-                line++;
-                const tRow = tbody.insertRow();
-                if (line % 2 == 0) tRow.className = "stripe";
-                for (const key in row) {
-                    const cell = tRow.insertCell();
-                    if (Array.isArray(row[key])){
-                        for (const item of row[key]){
-                            const a = document.createElement('a');
-                            const linkText = document.createTextNode(item.name);
-                            a.appendChild(linkText);
-                            a.href = `https://www.codewars.com/kata/${item.id}`;
-                            a.target="_blank";
-                            cell.appendChild(a);
-                            cell.appendChild(document.createElement('br'));
-                        }
-                    } else {
-                        const text = document.createTextNode(row[key]);
-                        cell.appendChild(text);
+    // TABLE BODY
+    if (rows){
+        const tbody = tab.createTBody();
+        let line = 0;
+        for (const row of rows) {
+            line++;
+            const tRow = tbody.insertRow();
+            if (line % 2 == 0) tRow.className = "stripe";
+            for (const key in row) {
+                const cell = tRow.insertCell();
+                if (Array.isArray(row[key])){
+                    for (const item of row[key]){
+                        const a = document.createElement('a');
+                        const linkText = document.createTextNode(item.name);
+                        a.appendChild(linkText);
+                        a.href = `https://www.codewars.com/kata/${item.id}`;
+                        a.target="_blank";
+                        cell.appendChild(a);
+                        cell.appendChild(document.createElement('br'));
                     }
+                } else {
+                    const text = document.createTextNode(row[key]);
+                    cell.appendChild(text);
                 }
             }
         }
