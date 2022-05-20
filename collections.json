@@ -9,5 +9,14 @@
     { "tutorial": "JS Intro",                          "collection": "boring-bananas" },
     { "tutorial": "Web debugging and profiling tools", "collection": "practical-pyramids" },
     { "tutorial": "Data types",                        "collection": "absolute-algorithms" },
-    { "tutorial": "Functions",                         "collection": "functional-fruits" }
+    { "tutorial": "Functions",                         "collection": "functional-fruits" },
+    { "tutorial": "Extras",                            "collection": "elementary-expeditions" },
+    { "tutorial": "Extras",                            "collection": "hesitant-heroes" },
+    { "tutorial": "Extras",                            "collection": "interesting-ideas" },
+    { "tutorial": "Extras",                            "collection": "mindblowing-machines" },
+    { "tutorial": "Extras",                            "collection": "recursive-roses" },
+    { "tutorial": "Extras",                            "collection": "tactical-teaspoons" },
+    { "tutorial": "Extras",                            "collection": "utmost-umbrellas" },
+    { "tutorial": "Extras",                            "collection": "various-visuals" },
+    { "tutorial": "Extras",                            "collection": "wuthering-widths" }
 ]
