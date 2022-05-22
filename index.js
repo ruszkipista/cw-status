@@ -3,6 +3,14 @@ async function init(){
         form.onsubmit=onClickedSubmit;
     }
 
+    const statusElement = document.getElementById("status");
+    const userID = window.localStorage.getItem('userid');
+    if (userID){
+        const userIdInputElement = document.getElementById('userid');
+        userIdInputElement.value = userID;
+        statusElement.innerText = "Wait for it...";
+    }
+
     let collectionsTxt = await fetchCollections("collections.json");
     const collections = JSON.parse(collectionsTxt);
     for (const collIndex in collections){
@@ -13,15 +21,12 @@ async function init(){
     collectionsTxt = JSON.stringify(collections);
     window.sessionStorage.setItem('collections', collectionsTxt);
 
-    const userID = window.localStorage.getItem('userid');
     if (userID){
-        const userIdInputElement = document.getElementById('userid');
-        userIdInputElement.value = userID;
-
         const completedKatas = await getCWdata(userID);
         const tableContent = generateTableContent(collections, completedKatas);   
         generateTable(tableContent);
     }
+    statusElement.innerText = "";
 }
 onload=init;
 

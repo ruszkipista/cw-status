@@ -23,3 +23,7 @@ table tbody tr td {
 table tbody tr.stripe {
     background: #FEEDB7;
 }
+
+#status {
+    color: red;
+}
