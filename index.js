@@ -133,6 +133,8 @@ function generateTableContent(collections, completedKatas){
             if (kata.id in completedKataDict)
                 if (completedKataDict[kata.id].completedLanguages.includes("javascript")){
                     doneInJS++;
+                    if (completedKataDict[kata.id].completedLanguages.length>1)
+                        doneInOther++;
                     continue;
                 } else
                     doneInOther++;
