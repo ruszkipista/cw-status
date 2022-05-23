@@ -64,7 +64,7 @@ async function fetchCollections(file){
 }
 
 async function getCWkatasFromCollection(collection){
-    const targetUrl = `http://www.codewars.com/collections/${collection}`;
+    const targetUrl = `https://www.codewars.com/collections/${collection}`;
     const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
     return await fetch(url)
     .then(response => {
