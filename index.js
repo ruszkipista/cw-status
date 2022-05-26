@@ -78,7 +78,7 @@ async function getCWkatasFromCollection(collection){
         // target anchor elements like this
         // <a href="/kata/52adc142b2651f25a8000643">Sleigh Authentication</a>
         // and get with kataID:52adc142b2651f25a8000643 and kataName:Sleigh Authentication
-        const matches = data.contents.matchAll(/<a href="\/kata\/(.*?)">(.*?)<\/a>/g);
+        const matches = data.contents.matchAll(/<a class="ml-2" href="\/kata\/(.*?)">(.*?)<\/a>/g);
         const katas=[];
         // the kataName might contain HTML entity, convert them back to character
         for (const match of matches) katas.push({"id":match[1],"name":decodeHtmlEntity(match[2])});
