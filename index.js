@@ -13,12 +13,9 @@ async function init(){
 
     let collectionsTxt = await fetchCollections("collections.json");
     const collections = JSON.parse(collectionsTxt);
-    for (const collIndex in collections){
-        const collectionID = collections[collIndex].collection;
-        collections[collIndex].katas = await getCWkatasFromCollection(collectionID);
-    }
+    const collectionsWithKatas = await getKatasFromCollections(collections);
     window.localStorage.removeItem('collections');
-    collectionsTxt = JSON.stringify(collections);
+    collectionsTxt = JSON.stringify(collectionsWithKatas);
     window.sessionStorage.setItem('collections', collectionsTxt);
 
     if (userID){
@@ -63,30 +60,22 @@ async function fetchCollections(file){
   });
 }
 
-async function getCWkatasFromCollection(collection){
-    const targetUrl = `https://www.codewars.com/collections/${collection}`;
-    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-    return await fetch(url)
-    .then(response => {
-        if (response.status !== 200) {
-          console.log(`Looks like there was a problem fetching ${url}. Status Code: ${response.status}`);
-          return null;
-        }
+async function getKatasFromCollections(collections){
+    const pages = await Promise.all(collections.map(async collection => {
+        const targetUrl = `https://www.codewars.com/collections/${collection.collectionId}`;
+        const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        const response = await fetch(url);
         return response.json();
-    })
-    .then(data => {
+    }));
+    collections.forEach((collection,i)=>{
         // target anchor elements like this
         // <a href="/kata/52adc142b2651f25a8000643">Sleigh Authentication</a>
         // and get with kataID:52adc142b2651f25a8000643 and kataName:Sleigh Authentication
-        const matches = data.contents.matchAll(/<a.*? href="\/kata\/([\da-f]+)">(.*?)<\/a>/gi);
-        const katas=[];
+        const matches = pages[i].contents.matchAll(/<a.*? href="\/kata\/([\da-f]+)">(.*?)<\/a>/gi);
         // the kataName might contain HTML entity, convert them back to character
-        for (const match of matches) katas.push({"id":match[1],"name":decodeHtmlEntity(match[2])});
-        return katas;
-    })
-    .catch(err => {
-      console.log('Fetch Error :%s', err);
+        collection.katas = [...matches].map(match=>({"id":match[1],"name":decodeHtmlEntity(match[2])}));
     });
+    return collections;
 }
 
 const decodeHtmlEntity = html=> {
