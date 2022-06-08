@@ -11,7 +11,7 @@
     { "tutorial": "Data types",                        "collectionId": "absolute-algorithms" },
     { "tutorial": "Functions",                         "collectionId": "functional-fruits" },
     { "tutorial": "Date, Regular Expressions",         "collectionId": "various-visuals" },
-    { "tutorial": "Agile, Scrum",                      "collectionId": "interesting-ideas_1" },
+    { "tutorial": "Agile, Scrum",                      "collectionId": "interesting-ideas-1" },
     { "tutorial": "JS DOM Events",                     "collectionId": "utmost-umbrellas" },
     { "tutorial": "Object Oriented Programming",       "collectionId": "hesitant-heroes" },
     { "tutorial": "JS Modules",                        "collectionId": "recursive-roses" },
